@@ -1,3 +1,6 @@
+# The real URLs file
+/urls.txt
+
 # Editor preferences
 /.vscode
 /.idea

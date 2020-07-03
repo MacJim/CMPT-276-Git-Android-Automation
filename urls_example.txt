@@ -1,0 +1,5 @@
+# Rename this file to `urls.txt`.
+# Empty lines and lines beginning with '#' are ignored.
+
+https://github.com/MacJim/MinecraftMusicExtractor.git
+https://github.com/MacJim/PyTorch-Tryout.git
