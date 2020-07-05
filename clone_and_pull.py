@@ -1,10 +1,24 @@
-# Clones a Git repo.
-
 import os
+import concurrent.futures
 
 import git
 
 
+# MARK: - Settings
+# Do not use a big setting here. I used 8 and got banned immediately.
+thread_count = 2
+
+
+# MARK: - Main
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+git_clone_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "clones")
+if (not os.path.exists(git_clone_root)):
+    os.mkdir(git_clone_root)
+
+
+# MARK: - Git clone/pull
+# MARK: Helper functions
 def git_clone(url: str, destination_dir: str, repo_name: str = None) -> str:
     """
     Clone a git repo.
@@ -30,7 +44,7 @@ def git_clone(url: str, destination_dir: str, repo_name: str = None) -> str:
             raise FileNotFoundError
 
         # This is a valid git working directory. Try to pull.
-        print("Pulling from " + url)
+        # print("Pulling from " + url)
         repo = git.Repo(repo_path)
         origin = repo.remotes[0]
         origin.fetch()
@@ -43,7 +57,41 @@ def git_clone(url: str, destination_dir: str, repo_name: str = None) -> str:
         # print(pull_info[0].flags)
     else:
         # No repo exists here. Try to clone.
-        print("Cloning from " + url)
+        # print("Cloning from " + url)
         repo = git.Repo.clone_from(url, repo_path)
 
     return repo_path
+
+
+def clone_thread(git_clone_url: str):
+    try:
+        cloned_dir = git_clone(git_clone_url, git_clone_root)
+        cloned_dirs.append(cloned_dir)
+    except FileExistsError:
+        print("A file exists for " + git_clone_url)
+    except FileNotFoundError:
+        print("A folder exists without the \".git\" directory for " + git_clone_url)
+    except:
+        print("Unknown exception for " + git_clone_url)
+
+
+# MARK: Get Git URLs
+git_clone_urls = []
+
+with open("urls.txt", "r") as urls_file:
+    for line in urls_file:
+        line = line.strip("\n ")
+        if ((len(line) > 0) and (line[0] != '#')):
+            # print("Valid Git URL:", line)
+            git_clone_urls.append(line)
+
+print("URLs found:", len(git_clone_urls))
+
+
+# MARK: Clone using `thread_count` threads.
+cloned_dirs = []
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
+    executor.map(clone_thread, git_clone_urls)
+
+print("Cloned directories:", cloned_dirs)
